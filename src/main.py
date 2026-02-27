@@ -1,30 +1,31 @@
 import os
+import logging
 from dotenv import load_dotenv
-from models.expense import Expense
+from utils.csv_helper import read_csv_files
 
-# 1. Load the .env file
+# 1. Configure Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# 2. Load the .env file
 load_dotenv()
 
-def verify_setup():
-    print("--- Day 1 Verification ---")
+def main():
+    logger.info("🚀 Starting Expense Processor...")
     
-    # Check Environment Variables
-    db_name = os.getenv("DB_NAME")
-    print(f"[INFO] Database Name from .env: {db_name}")
+    # Fetch the folder path from .env
+    data_folder = os.getenv("DATA_FOLDER", "./data")
     
-    # Test Pydantic Model with sample data
-    test_data = {
-        "transaction_date": "2026-02-27",
-        "category": "Food",
-        "amount": 450.75,
-        "description": "Day 1 Celebration"
-    }
+    # 3. Call the Ingestor (We will create this next)
+    expenses = read_csv_files(data_folder)
     
-    try:
-        expense = Expense(**test_data)
-        print(f"[SUCCESS] Pydantic validated: {expense.category} - {expense.amount}")
-    except Exception as e:
-        print(f"[ERROR] Validation failed: {e}")
+    logger.info(f"✅ Successfully validated {len(expenses)} total expenses.")
 
 if __name__ == "__main__":
-    verify_setup()
+    main()
