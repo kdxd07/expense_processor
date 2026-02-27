@@ -1,0 +1,4 @@
+transaction_date,category,amount,description
+2026-02-27,Food,15.50,Lunch at University
+2026-02-27,Transport,5.00,Bus fare
+2026-02-26,Electronics,1200.00,New Monitor
