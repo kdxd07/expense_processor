@@ -2,30 +2,30 @@ import os
 import logging
 from dotenv import load_dotenv
 from utils.csv_helper import read_csv_files
+from database.connection import insert_expenses # New import
 
-# 1. Configure Logging
+# Configure Logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# 2. Load the .env file
 load_dotenv()
 
 def main():
     logger.info("🚀 Starting Expense Processor...")
     
-    # Fetch the folder path from .env
     data_folder = os.getenv("DATA_FOLDER", "./data")
     
-    # 3. Call the Ingestor (We will create this next)
+    # 1. Ingest and Validate (from Day 2)
     expenses = read_csv_files(data_folder)
     
-    logger.info(f"✅ Successfully validated {len(expenses)} total expenses.")
+    # 2. Insert into Database (Day 3 Goal)
+    if expenses:
+        insert_expenses(expenses)
+    else:
+        logger.warning("⚠️ No valid expenses found to insert.")
 
 if __name__ == "__main__":
     main()
