@@ -1,47 +1,65 @@
 import os
 import psycopg2
 import logging
+from typing import List, Optional
 from dotenv import load_dotenv
+from models.expense import Expense
 
+# Load environment variables from .env file
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
+    """
+    Establishes a connection to the PostgreSQL database using 
+    credentials stored in environment variables.
+    """
     try:
-        conn = psycopg2.connect(
+        connection = psycopg2.connect(
             dbname=os.getenv("DB_NAME"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             host=os.getenv("DB_HOST"),
             port=os.getenv("DB_PORT")
         )
-        return conn
-    except Exception as e:
-        logger.error(f"❌ Database connection failed: {e}")
+        return connection
+    except Exception as error:
+        logger.error(f"❌ Database connection failed: {error}")
         return None
     
-def insert_expenses(expenses):
-    conn = get_db_connection()
-    if not conn:
+def insert_expenses(expenses: List[Expense]) -> None:
+    """
+    Takes a list of validated Expense objects and performs a 
+    bulk insertion into the PostgreSQL database.
+    """
+    connection = get_db_connection()
+    if not connection:
         return
     
     try:
-        cur = conn.cursor()
-        query = """
-            INSERT INTO expenses (transaction_date, category, amount, description)
-            VALUES (%s, %s, %s, %s)
-        """
-        # Convert Pydantic objects to tuples for SQL
-        data_to_insert = [
-            (e.transaction_date, e.category, e.amount, e.description)
-            for e in expenses
-        ]
-        
-        cur.executemany(query, data_to_insert)
-        conn.commit()
-        logger.info(f"💾 Successfully inserted {len(data_to_insert)} records into PostgreSQL.")
-        cur.close()
-    except Exception as e:
-        logger.error(f"❌ Failed to insert data: {e}")
+        # A cursor allows us to execute SQL commands
+        with connection.cursor() as cursor:
+            insert_query = """
+                INSERT INTO expenses (transaction_date, category, amount, description)
+                VALUES (%s, %s, %s, %s)
+            """
+            
+            # Prepare data: Convert Pydantic objects into a list of tuples for psycopg2
+            data_to_insert = [
+                (exp.transaction_date, exp.category, exp.amount, exp.description)
+                for exp in expenses
+            ]
+            
+            # executemany is significantly faster than executing in a loop
+            cursor.executemany(insert_query, data_to_insert)
+            
+            # Commit the transaction to make changes permanent
+            connection.commit()
+            logger.info(f"💾 Successfully inserted {len(data_to_insert)} records into PostgreSQL.")
+            
+    except Exception as error:
+        logger.error(f"❌ Failed to insert data into database: {error}")
+        # If insertion fails, we don't need to roll back manually here as no commit was called
     finally:
-        conn.close()
+        # Always close the connection to free up database resources
+        connection.close()
