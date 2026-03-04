@@ -1,65 +1,77 @@
 # Expense Processor CLI 🚀
+A professional-grade data pipeline built to automate the Ingestion (Extract), Validation (Transform), and Analysis (Load) of financial expense data. This application is fully containerized to ensure high reliability and environment consistency.
 
-A professional-grade data pipeline that automates the ingestion, validation, and analysis of financial expense data.
+## Expense Processor Architecture 🏗️
+The system follows a Modular Pipeline Architecture, ensuring a clean separation of concerns between data handling and business logic.
 
-## 🏗️ Architecture Overview
-This project follows a modular pipeline architecture:
-1. **Ingestion**: Scans the `/data` directory for multiple CSV files using `pathlib`.
-2. **Validation**: Uses **Pydantic** to enforce strict data types and business rules (e.g., preventing negative amounts).
-3. **Storage**: Securely moves validated data into a **PostgreSQL** database using batch processing.
-4. **Analytics**: Automatically generates financial reports using SQL aggregations.
-5. **Orchestration**: Fully containerized using **Docker Compose** for environment parity.
+Ingestion Layer: Automatically scans the /data directory for multiple CSV files using pathlib.
 
-## 🛠️ Tech Stack
-- **Python 3.13** (Managed by `uv`)
-- **Pydantic** (Data Validation)
-- **PostgreSQL 15** (Database)
-- **Docker & Docker Compose** (Containerization)
-- **Psycopg2** (Database Driver)
+Validation Layer: Employs Pydantic to enforce strict data types and business rules (e.g., ensuring amounts are always positive).
 
+Persistence Layer: Securely migrates validated data into PostgreSQL. It uses Idempotent Logic (TRUNCATE) to ensure fresh synchronization.
 
-# Expense Processor CLI 🚀
+Analytics Engine: Generates real-time financial reports using SQL aggregations for total spending and category breakdowns.
 
-A professional-grade data pipeline built to automate the ingestion, validation, and analysis of financial expense data. This application is fully containerized and designed for high reliability and scalability.
+## Expense Processor Tech Stack 🛠️
+Python 3.13: Utilizing modern features like type hinting and uv package management.
 
----
+Pydantic: For industry-standard data validation and schema enforcement.
 
-## 🏗️ Application Architecture Overview
-The system follows a **Modular Pipeline Architecture**, separating concerns into distinct layers to ensure the code is maintainable and scalable.
+PostgreSQL 15: Relational database chosen for financial data precision.
 
-```text
-[Data Source] -> [Ingestion Layer] -> [Processing] -> [Persistence] -> [Presentation]
-      |               |                 |              |               |
-      v               v                 v              v               v
-[CSV Files] -> [pathlib Discovery] -> [Pydantic] -> [PostgreSQL] -> [SQL Reports]
-                      ^                 |              ^
-                      |                 v              |
-               [.env Config]     [Error Logging] [Docker Volumes]
+Docker & Docker Compose: For "Plug-and-Play" deployment and environment parity.
 
+Psycopg2: High-performance database driver for PostgreSQL.
 
+Pytest: Comprehensive unit testing for model validation.
 
-Git Workflow Explanation:
-This project follows professional Feature Branching standards:
+## Expense Processor Project Structure 📂
+.
+├── src/
+│   ├── database/       # DB Connection and SQL execution
+│   ├── models/         # Pydantic data schemas
+│   ├── utils/          # CSV processing and Analytics logic
+│   └── main.py         # Application Entry Point
+├── data/               # Folder for incoming CSV files
+├── tests/              # Unit tests for data integrity
+├── Dockerfile          # Container instructions
+└── docker-compose.yml  # Multi-container orchestration
 
-feature/data-modeling: Environment setup and Pydantic schema.
+## Expense Processor Execution Guide 🚀
+1. Prerequisites
+Ensure you have Docker and Docker Compose installed.
 
-feature/csv-ingestion: File discovery and logging logic.
+2. Environment Configuration
+Create a .env file in the root folder:
+DB_NAME=expense_db
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_HOST=db
+DB_PORT=5432
+DATA_FOLDER=./data
 
-feature/database-integration: PostgreSQL schema and connection bridge.
-
-feature/docker-setup: Containerization and orchestration.
-
-main: The stable production branch where all features are merged.
-
-## 🚀 How to Run
-Ensure you have Docker installed, then run:
-```bash
+3. Build and Start
 docker-compose up --build
 
+## Expense Processor Key Features 📉
+Idempotency: Designed to be re-run safely. It clears old data before syncing, ensuring the report always reflects current files.
 
-Assumptions and Challenges
-Race Condition: Handled the startup delay where Python tries to connect before PostgreSQL is ready.
+Precision Handling: Uses DECIMAL(12, 2) in SQL to prevent floating-point errors in financial calculations.
 
-Precision: Used DECIMAL(12, 2) for currency to avoid floating-point errors.
+Error Resilience: Individual row failures are logged as errors without stopping the entire pipeline processing.
 
-Resilience: Designed to log individual row errors without stopping the entire pipeline.
+Self-Documenting: Extensive use of Python Docstrings and type hints for professional collaboration.
+
+## Expense Processor Development Workflow 🔄
+This project maintains a professional commit history with clear feature branching:
+
+main: Production-stable branch.
+
+feature/data-modeling: Pydantic schema setup.
+
+feature/database-integration: PostgreSQL bridge logic.
+
+feature/docker-setup: Environment containerization.
+
+# To view the visual commit graph:
+git log --oneline --graph --all
