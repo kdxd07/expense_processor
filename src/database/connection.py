@@ -29,28 +29,31 @@ def get_db_connection():
     
 def insert_expenses(expenses: List[Expense]) -> None:
     """
-    Takes a list of validated Expense objects and performs a 
-    bulk insertion into the PostgreSQL database.
+    Cleans existing records and performs a bulk insertion of 
+    validated Expense objects into PostgreSQL.
     """
     connection = get_db_connection()
     if not connection:
         return
     
     try:
-        # A cursor allows us to execute SQL commands
         with connection.cursor() as cursor:
+            # IMPORTANT: Clear existing data to prevent duplication on re-runs
+            cursor.execute("TRUNCATE TABLE expenses;")
+            logger.info("🧹 Database cleared for fresh synchronization.")
+
             insert_query = """
                 INSERT INTO expenses (transaction_date, category, amount, description)
                 VALUES (%s, %s, %s, %s)
             """
             
-            # Prepare data: Convert Pydantic objects into a list of tuples for psycopg2
+            # Prepare data: Convert Pydantic objects into a list of tuples
             data_to_insert = [
                 (exp.transaction_date, exp.category, exp.amount, exp.description)
                 for exp in expenses
             ]
             
-            # executemany is significantly faster than executing in a loop
+            # Efficiently insert all records in one batch
             cursor.executemany(insert_query, data_to_insert)
             
             # Commit the transaction to make changes permanent
@@ -59,7 +62,6 @@ def insert_expenses(expenses: List[Expense]) -> None:
             
     except Exception as error:
         logger.error(f"❌ Failed to insert data into database: {error}")
-        # If insertion fails, we don't need to roll back manually here as no commit was called
     finally:
         # Always close the connection to free up database resources
         connection.close()
