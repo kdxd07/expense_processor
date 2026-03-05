@@ -2,46 +2,43 @@ import os
 import logging
 from dotenv import load_dotenv
 
-# Import our refined modules with updated function names
+# Import my own functions from the other files
 from utils.csv_helper import get_expenses_from_folder
 from database.connection import insert_expenses
 from utils.analytics import run_basic_analytics
 
-# Standard logging configuration for production-ready output
+# Basic setup for logging so I can see what the program is doing
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Load secret credentials and configurations
+# Load my settings from the .env file
 load_dotenv()
 
 def main() -> None:
-    """
-    Main execution entry point. Coordinates the ETL pipeline:
-    Extract (CSV) -> Transform (Pydantic) -> Load (Postgres) -> Analyze.
-    """
+    # This is the main part of my program that runs everything in order
     logger.info("🚀 Starting Expense Processor...")
     
-    # Retrieve data location from environment variables or use default
+    # 1. Look for my folder where the CSV files are stored
     data_folder = os.getenv("DATA_FOLDER", "./data")
     
-    # PHASE 1: Data Ingestion and Validation
-    # We call the renamed function from csv_helper.py
+    # 2. Go get the expenses from that folder
     expenses = get_expenses_from_folder(data_folder)
     
-    # PHASE 2: Persistence and Analysis
+    # 3. If I actually found some data, save it and show the results
     if expenses:
-        # Attempt to store the validated records in the database
+        # Save the list of expenses into my Postgres database
         insert_expenses(expenses)
         
-        # PHASE 3: Business Intelligence
+        # Now run the math to show my total spending
         logger.info("📈 Running final analytics...")
         run_basic_analytics()
     else:
+        # Show a warning if the folder was empty or files were bad
         logger.warning("⚠️ No valid expenses found to process. Check your data folder.")
 
 if __name__ == "__main__":
-    # This ensures main() only runs if the script is executed directly
+    # This makes sure the program only starts if I run this specific file
     main()
